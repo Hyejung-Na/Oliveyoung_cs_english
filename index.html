@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>Olive Young G.L.C Pattern Study App (Randomized)</title>
+  <title>Olive Young G.L.C Pattern Study App</title>
   <style>
     :root{
       --bg:#f5f8ef;
@@ -88,7 +88,7 @@
     <div class="header">
       <section class="hero">
         <div class="eyebrow">Olive Young · G.L.C Beginner</div>
-        <h1>상황 응대 Study App (정답 믹스)</h1>
+        <h1>상황 응대 Study App (보기 무작위)</h1>
         <p>🔊 버튼을 누르면 원어민 음성을 직접 들을 수 있습니다.</p>
         <div class="meta-grid">
           <div class="meta-card"><span>현재 위치</span><strong id="currentStepLabel">1차시 - 패턴 1</strong></div>
@@ -138,6 +138,18 @@
       }
     }, { passive: false });
 
+    /* 배열 셔플 함수 */
+    function shuffleArray(arr) {
+      var newArr = arr.slice();
+      for (var i = newArr.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = newArr[i];
+        newArr[i] = newArr[j];
+        newArr[j] = temp;
+      }
+      return newArr;
+    }
+
     /* TTS 음성 재생 함수 */
     window.speak = function(text){
       if(!('speechSynthesis' in window)){
@@ -151,9 +163,8 @@
       window.speechSynthesis.speak(utter);
     };
 
-    var APP_STORAGE_KEY = 'olive-young-glc-shuffled-v1';
+    var APP_STORAGE_KEY = 'olive-young-glc-match-shuffled-v1';
 
-    /* 정답 번호 위치를 완전히 무작위로 재배치한 커리큘럼 데이터 */
     var sections = {
       1: {
         title: '1차시 (패턴 1~3)',
@@ -196,8 +207,8 @@
             ],
             mcqQuestions: [
               { scenario:'[상황 1] 매장을 둘러보던 고객이 "Is there anything on sale right now?"라고 물었습니다. 올리브영 빅세일 기간임을 자신 있게 알리는 표현은?', prompt:'직원의 올바른 응대 표현은?', options:['We make sale today.','Selling is big now.','Sure. The Olive Young Big Sale is on now.'], answer:2, explain:'진행 중인 브랜드 행사를 알릴 때는 [행사명] + is on now 구문을 활용합니다.' },
-              { scenario:'[상황 2] 고객이 특정 보습크림을 집어들며 "Do I get anything if I buy this?"라고 혜택을 질문했습니다. 증정 행사 중임을 설명하려면?', options:['Yes, it’s on a free gift promotion.','We give free present today.','You receive gift now.'], answer:0, explain:'증정품 프로모션 상태임을 알릴 때는 It’s on a free gift promotion 패턴이 적절합니다.' },
-              { scenario:'[상황 3] 고객이 할인 행사가 언제까지 진행되는지 "How long is the promotion going on?"이라고 물었습니다. "이번 주말까지입니다"라고 답하려면?', options:['It is sale for this week.','It’s on promotion until the end of this week.','We close promotion Sunday.'], answer:1, explain:'행사 마감 기한을 말할 때는 until the end of ~ 표현을 붙여 안내합니다.' }
+              { scenario:'[상황 2] 고객이 특정 보습크림을 집어들며 "Do I get anything if I buy this?"라고 혜택을 질문했습니다. 증정 행사 중임을 설명하려면?', prompt:'직원의 올바른 응대 표현은?', options:['Yes, it’s on a free gift promotion.','We give free present today.','You receive gift now.'], answer:0, explain:'증정품 프로모션 상태임을 알릴 때는 It’s on a free gift promotion 패턴이 적절합니다.' },
+              { scenario:'[상황 3] 고객이 할인 행사가 언제까지 진행되는지 "How long is the promotion going on?"이라고 물었습니다. "이번 주말까지입니다"라고 답하려면?', prompt:'직원의 올바른 응대 표현은?', options:['It is sale for this week.','It’s on promotion until the end of this week.','We close promotion Sunday.'], answer:1, explain:'행사 마감 기한을 말할 때는 until the end of ~ 표현을 붙여 안내합니다.' }
             ],
             scrambleQuestions: [
               { prompt:'이번 주까지 행사 중입니다.', answer:'It is on promotion until the end of this week.', tokens:['promotion','end','It','until','on','is','this','the','of','week.'] },
@@ -281,6 +292,19 @@
       }
     };
 
+    /* 패턴별 매칭 보기 한글 목록을 미리 무작위로 믹스하여 보관하는 객체 */
+    var shuffledMatchingOrder = {};
+
+    function getShuffledMatching(step) {
+      if (!shuffledMatchingOrder[step.id]) {
+        var list = step.matchingPairs.map(function(pair, idx){
+          return { index: idx, text: pair[1] };
+        });
+        shuffledMatchingOrder[step.id] = shuffleArray(list);
+      }
+      return shuffledMatchingOrder[step.id];
+    }
+
     function buildDefaultState(){
       return {
         currentSection: 1,
@@ -352,8 +376,10 @@
 
       var html = '<h2>' + step.title + '. ' + step.short + '</h2><div class="sub">' + step.subtitle + '</div>';
 
-      /* 1. 표현 매칭 */
+      /* 1. 표현 매칭 (한글 보기를 무작위 셔플해서 생성) */
       html += '<div class="panel"><h3>1. 표현 매칭</h3>';
+      var randomMatchingList = getShuffledMatching(step);
+
       step.matchingPairs.forEach(function(pair, i){
         var sel = matchAns[i];
         html += '<div style="margin-bottom:10px; padding:8px; background:#fff; border-radius:12px; border:1px solid var(--border);">' +
@@ -362,21 +388,25 @@
             '<button class="audio-btn" onclick="window.speak(\'' + pair[0].replace(/'/g, "\\'") + '\')">🔊 발음</button>' +
           '</div>' +
           '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
-            step.matchingPairs.map(function(p, rIdx){
-              var active = Number(sel) === rIdx;
-              return '<button class="btn ' + (active ? 'selected' : '') + '" style="font-size:11px; padding:6px;" onclick="window.setMatch(\'' + step.id + '\',' + i + ',' + rIdx + ')">' + p[1] + '</button>';
+            randomMatchingList.map(function(item){
+              var active = Number(sel) === item.index;
+              return '<button class="btn ' + (active ? 'selected' : '') + '" style="font-size:11px; padding:6px;" onclick="window.setMatch(\'' + step.id + '\',' + i + ',' + item.index + ')">' + item.text + '</button>';
             }).join('') +
           '</div></div>';
       });
       html += '</div>';
 
-      /* 2. 상황 부여 객관식 퀴즈 (정답 무작위화 적용) */
+      /* 2. 상황 부여 객관식 퀴즈 */
       html += '<div class="panel"><h3>2. 실전 상황 응대 퀴즈</h3>';
       step.mcqQuestions.forEach(function(q, i){
         var sel = mcqAns[i];
+        var scenarioHtml = q.scenario ? '<div class="scenario-box">' + q.scenario + '</div>' : '';
+        var promptText = q.prompt || '알맞은 표현을 고르세요.';
+
         html += '<div style="margin-bottom:14px; padding-bottom:10px; border-bottom:1px dashed var(--border);">' +
-          '<div class="scenario-box">' + q.scenario + '</div>' +
-          '<div style="font-size:13px; font-weight:800; margin-bottom:6px; color:var(--ink-olive);">' + (i+1) + '. ' + q.prompt + '</div>';
+          scenarioHtml +
+          '<div style="font-size:13px; font-weight:800; margin-bottom:6px; color:var(--ink-olive);">' + (i+1) + '. ' + promptText + '</div>';
+        
         q.options.forEach(function(opt, optIdx){
           var cls = 'choice';
           if(Number(sel) === optIdx) cls += ' selected';
