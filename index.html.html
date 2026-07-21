@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Olive Young G.L.C Pattern Study App (Randomized)</title>
+  <style>
+    :root{
+      --bg:#f5f8ef;
+      --surface:#ffffff;
+      --surface-olive:#eff6df;
+      --primary:#97c11f;
+      --primary-dark:#5e7f0e;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --border:#d7e2c3;
+      --success:#15803d;
+      --error:#dc2626;
+      --ink-olive:#30420b;
+      --shadow:0 12px 28px rgba(36,52,12,.08);
+    }
+    *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+    
+    html, body {
+      margin:0; padding:0;
+      background:linear-gradient(180deg,#ecf5d8 0%, var(--bg) 180px);
+      color:var(--text);
+      font-family:Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, sans-serif;
+      min-height:100vh;
+      overscroll-behavior-y: none; /* 모바일 pull-to-refresh 차단 */
+    }
+    
+    button,input,select{font:inherit}
+    input,select{width:100%;border:1px solid var(--border);background:#fff;min-height:42px;border-radius:13px;padding:10px 12px;color:var(--text)}
+    .app{max-width:430px;min-height:100vh;margin:0 auto;padding:12px 12px 28px;position:relative}
+    
+    .header{position:sticky;top:0;z-index:20;padding-top:env(safe-area-inset-top,0);background:rgba(245,248,239,.96);backdrop-filter:blur(10px)}
+    .hero{background:linear-gradient(135deg,#abd43a 0%, #ddf0b4 100%);border-radius:22px;padding:12px 14px;box-shadow:var(--shadow);color:#223108}
+    .eyebrow{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.78);font-size:11px;font-weight:800}
+    h1{font-size:18px;line-height:1.2;margin:8px 0 6px}
+    .hero p{margin:0;font-size:12px;line-height:1.45;color:#355006}
+    
+    .meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+    .meta-card{background:rgba(255,255,255,.84);border-radius:14px;padding:8px 10px;border:1px solid rgba(255,255,255,.75)}
+    .meta-card span{display:block;font-size:10px;color:#456015;font-weight:800;margin-bottom:3px}
+    .meta-card strong{font-size:13px}
+    
+    .section-selector{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;}
+    .section-btn{padding:10px;border-radius:14px;border:1px solid var(--border);background:#fff;text-align:center;font-weight:800;font-size:12px;cursor:pointer;}
+    .section-btn.active{background:var(--ink-olive);color:#fff;border-color:var(--ink-olive);}
+    
+    .tabs{display:flex;gap:6px;overflow:auto;padding:8px 2px 4px;scrollbar-width:none}
+    .tabs::-webkit-scrollbar{display:none}
+    .tab{min-width:76px;padding:8px 6px;border-radius:14px;border:1px solid var(--border);background:#fff;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.03);cursor:pointer;}
+    .tab strong{display:block;font-size:12px}
+    .tab small{display:block;margin-top:2px;font-size:10px;color:var(--muted)}
+    .tab.active{background:var(--surface-olive);border-color:#bed585;box-shadow:0 0 0 2px rgba(151,193,31,.14)}
+    .tab.done::after{content:' ✓';color:var(--success);font-weight:900}
+    
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;box-shadow:var(--shadow);padding:14px;margin-top:8px}
+    .card h2{margin:0 0 4px;font-size:18px;line-height:1.28}
+    .sub{font-size:13px;line-height:1.5;color:var(--muted);margin-bottom:12px}
+    .panel{border:1px solid var(--border);border-radius:18px;padding:12px;background:#fcfdf9;margin-bottom:10px}
+    .panel h3{margin:0 0 8px;font-size:14px;line-height:1.4}
+    .help{font-size:12px;color:var(--muted);line-height:1.45;margin-bottom:8px}
+    
+    .scenario-box{background:#f0f7e6; border:1px solid #cce39e; border-radius:12px; padding:10px; font-size:12px; color:#2c4008; margin-bottom:8px; line-height:1.45;}
+    
+    .btn,.choice,.token,.ghost,.primary,.danger,.audio-btn{appearance:none;border:none;background:#fff;color:var(--text);border:1px solid var(--border);border-radius:13px;padding:10px 12px;min-height:42px;cursor:pointer;transition:.18s ease;touch-action:manipulation}
+    .btn:active,.choice:active,.token:active,.audio-btn:active{transform:scale(.98)}
+    .btn.selected,.choice.selected,.token.selected{background:#f4fae6;border-color:#99bf3c}
+    .choice.correct{background:#edf9f0;border-color:#9ad1aa}
+    .choice.wrong{background:#fff1f1;border-color:#efb4b4}
+    .token.used{opacity:.4;pointer-events:none}
+    
+    .audio-btn{min-height:30px; padding:3px 8px; font-size:11px; background:#f0fdf4; border-color:#bbf7d0; color:#166534; font-weight:700;}
+    .ghost{background:#fff}
+    .primary{background:var(--primary);border-color:var(--primary);color:#233106;font-weight:900}
+    .danger{background:#fff1f1;border-color:#fca5a5;color:#b91c1c;font-weight:800}
+    
+    .inline-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+    .build-box{min-height:64px;border:1.5px dashed #acc85b;border-radius:16px;background:#f9fde9;padding:10px;margin-bottom:10px}
+    .built-wrap,.token-wrap{display:flex;flex-wrap:wrap;gap:8px}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="header">
+      <section class="hero">
+        <div class="eyebrow">Olive Young · G.L.C Beginner</div>
+        <h1>상황 응대 Study App (정답 믹스)</h1>
+        <p>🔊 버튼을 누르면 원어민 음성을 직접 들을 수 있습니다.</p>
+        <div class="meta-grid">
+          <div class="meta-card"><span>현재 위치</span><strong id="currentStepLabel">1차시 - 패턴 1</strong></div>
+          <div class="meta-card"><span>진행 상태</span><strong id="saveStateText">자동 저장 완료</strong></div>
+        </div>
+        
+        <div class="section-selector">
+          <button class="section-btn active" id="sec1Btn" onclick="window.switchSection(1)">
+            📌 1차시 (패턴 1~3)
+          </button>
+          <button class="section-btn" id="sec2Btn" onclick="window.switchSection(2)">
+            📌 2차시 (패턴 4~5)
+          </button>
+        </div>
+      </section>
+      
+      <nav class="tabs" id="stepTabs"></nav>
+    </div>
+
+    <main id="mainCard" class="card"></main>
+
+    <div class="card" style="text-align: center; background:#fff8f8; border-color:#fecaca;">
+      <div style="font-size:12px; color:#991b1b; margin-bottom:8px; font-weight:700;">
+        ⚠️ 처음부터 다시 풀고 싶으신가요?
+      </div>
+      <button type="button" class="danger" id="globalResetBtn" style="width:100%;">
+        🔄 전체 학습 내용 초기화
+      </button>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    'use strict';
+
+    /* 모바일 pull-to-refresh 차단 */
+    var lastTouchY = 0;
+    document.addEventListener('touchstart', function(e) {
+      if (e.touches.length === 1) lastTouchY = e.touches[0].clientY;
+    }, { passive: false });
+
+    document.addEventListener('touchmove', function(e) {
+      var touchY = e.touches[0].clientY;
+      var touchYDelta = touchY - lastTouchY;
+      if (window.scrollY === 0 && touchYDelta > 0) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    /* TTS 음성 재생 함수 */
+    window.speak = function(text){
+      if(!('speechSynthesis' in window)){
+        alert('이 브라우저는 음성 재생을 지원하지 않습니다.');
+        return;
+      }
+      window.speechSynthesis.cancel();
+      var utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'en-US';
+      utter.rate = 0.88;
+      window.speechSynthesis.speak(utter);
+    };
+
+    var APP_STORAGE_KEY = 'olive-young-glc-shuffled-v1';
+
+    /* 정답 번호 위치를 완전히 무작위로 재배치한 커리큘럼 데이터 */
+    var sections = {
+      1: {
+        title: '1차시 (패턴 1~3)',
+        steps: [
+          {
+            id: 'p1',
+            title: '패턴 1',
+            short: 'LET ME...',
+            subtitle: '확인, 안내, 찾아드리기 : 직원이 먼저 나서서 행동할 때',
+            matchingPairs: [
+              ['Let me check that for you.', '확인해 드리겠습니다.'],
+              ['Let me help you with that.', '도와 드리겠습니다.'],
+              ['Let me find it for you.', '상품을 찾아드리겠습니다.'],
+              ['Let me show you a few options.', '몇 가지 상품을 보여드리겠습니다.'],
+              ['Let me bring it from the back.', '창고에서 가져다드리겠습니다.'],
+              ['Let me guide you there.', '해당 위치로 안내해드리겠습니다.']
+            ],
+            mcqQuestions: [
+              { scenario:'[상황 1] 외국인 고객이 온라인 쇼핑몰 화면을 보여주며 "Excuse me, do you have this toner?"라고 물었습니다. 매장 재고를 먼저 확인해 드리고 싶을 때 할 가장 알맞은 말은?', prompt:'직원의 올바른 응대 표현은?', options:['You must search in the store.','Let me check that for you right away.','It is checking for you now.'], answer:1, explain:'고객의 재고 물음에 능동적으로 "바로 확인해 드리겠습니다"라고 정중히 안내하는 핵심 패턴입니다.' },
+              { scenario:'[상황 2] 어떤 상품을 골라야 할지 몰라 망설이는 고객이 "I’m not sure which one to get. Can you help me?"라고 도움을 요청했습니다. 주도적으로 돕겠다고 답할 때 적절한 말은?', prompt:'직원의 올바른 응대 표현은?', options:['I check for you now.','Go over there and see.','Of course. Let me help you with that.'], answer:2, explain:'Let me help you with that은 고객 요청에 자연스럽게 도와드리겠다는 시그니처 멘트입니다.' },
+              { scenario:'[상황 3] 고객이 찾는 토너 제품이 진열대에 없을 때, 창고에서 가져다드리겠다고 친절하게 안내하고 싶습니다. 알맞은 표현은?', prompt:'직원의 올바른 응대 표현은?', options:['Let me bring it from the back.','Wait for back room.','I go to back now.'], answer:0, explain:'창고(back)에서 상품을 꺼내오겠다고 알릴 때는 Let me bring it from the back 구문을 사용합니다.' }
+            ],
+            scrambleQuestions: [
+              { prompt:'바로 확인해 드리겠습니다.', answer:'Let me check that for you right away.', tokens:['that','check','right','Let','away.','me','for','you'] },
+              { prompt:'고객님 피부 타입에 맞는 상품을 찾아드릴게요.', answer:'Let me find the right one for your skin type.', tokens:['find','skin','type.','the','one','Let','right','for','me','your'] },
+              { prompt:'다시 한 번 확인해 드리겠습니다.', answer:'Let me double check that for you.', tokens:['check','double','me','Let','that','you.','for'] }
+            ]
+          },
+          {
+            id: 'p2',
+            title: '패턴 2',
+            short: 'IT’S ON...',
+            subtitle: '프로모션, 할인 행사 등 현재 진행 중인 상태 안내',
+            matchingPairs: [
+              ['It’s on sale now.', '지금 할인 중입니다.'],
+              ['The Big Sale is on now.', '빅 세일 중입니다.'],
+              ['It’s on a buy-one-get-one-free promotion.', '1+1 행사 중입니다.'],
+              ['It’s on promotion until the end of this week.', '이번 주까지 행사 중입니다.'],
+              ['It’s on a free gift promotion.', '증정 행사 중입니다.']
+            ],
+            mcqQuestions: [
+              { scenario:'[상황 1] 매장을 둘러보던 고객이 "Is there anything on sale right now?"라고 물었습니다. 올리브영 빅세일 기간임을 자신 있게 알리는 표현은?', prompt:'직원의 올바른 응대 표현은?', options:['We make sale today.','Selling is big now.','Sure. The Olive Young Big Sale is on now.'], answer:2, explain:'진행 중인 브랜드 행사를 알릴 때는 [행사명] + is on now 구문을 활용합니다.' },
+              { scenario:'[상황 2] 고객이 특정 보습크림을 집어들며 "Do I get anything if I buy this?"라고 혜택을 질문했습니다. 증정 행사 중임을 설명하려면?', options:['Yes, it’s on a free gift promotion.','We give free present today.','You receive gift now.'], answer:0, explain:'증정품 프로모션 상태임을 알릴 때는 It’s on a free gift promotion 패턴이 적절합니다.' },
+              { scenario:'[상황 3] 고객이 할인 행사가 언제까지 진행되는지 "How long is the promotion going on?"이라고 물었습니다. "이번 주말까지입니다"라고 답하려면?', options:['It is sale for this week.','It’s on promotion until the end of this week.','We close promotion Sunday.'], answer:1, explain:'행사 마감 기한을 말할 때는 until the end of ~ 표현을 붙여 안내합니다.' }
+            ],
+            scrambleQuestions: [
+              { prompt:'이번 주까지 행사 중입니다.', answer:'It is on promotion until the end of this week.', tokens:['promotion','end','It','until','on','is','this','the','of','week.'] },
+              { prompt:'사실 이 상품도 지금 행사 중입니다.', answer:'It is actually on promotion right now.', tokens:['on','actually','now.','is','promotion','It','right'] },
+              { prompt:'행사는 5일 동안 진행됩니다.', answer:'It is on promotion for five days.', tokens:['for','five','promotion','is','on','It','days.'] }
+            ]
+          },
+          {
+            id: 'p3',
+            title: '패턴 3',
+            short: 'WE HAVE IT...',
+            subtitle: '재고, 택스프리, 서비스, 결제 가능 여부 안내',
+            matchingPairs: [
+              ['Yes, we have it in stock.', '네, 재고 있습니다.'],
+              ['I’m sorry, we don’t have that in stock right now.', '죄송합니다. 현재 재고가 없습니다.'],
+              ['I’m afraid we’re out of that color.', '죄송합니다. 그 색상은 품절입니다.'],
+              ['Yes, we do offer tax-free service here.', '네, 저희 매장은 택스프리 서비스를 제공합니다.'],
+              ['I’m sorry, we can’t process that payment method.', '죄송합니다. 해당 결제 수단은 현재 사용이 어렵습니다.']
+            ],
+            mcqQuestions: [
+              { scenario:'[상황 1] 고객이 원하는 립스틱 색상을 가리키며 "Do you have this color?"라고 물었으나 해당 색상이 품절되었습니다. 유감을 표하며 품절을 안내하는 말은?', prompt:'직원의 올바른 응대 표현은?', options:['This color is finished.','I’m afraid we’re out of that color.','We don’t sell this color.'], answer:1, explain:'품절(out of) 상황에서는 I’m afraid ~를 활용하여 정중하게 안내합니다.' },
+              { scenario:'[상황 2] 글로벌 고객이 "Do you offer tax-free service here?"라고 면세 가능 여부를 질문했습니다. 제공하고 있다고 확답할 때 가장 알맞은 말은?', prompt:'직원의 올바른 응대 표현은?', options:['Tax-free is okay.','You take tax-free.','Yes, we do offer tax-free service here.'], answer:2, explain:'매장에서 서비스를 제공하고 있음을 명확히 전할 때는 We do offer ~ service를 씁니다.' },
+              { scenario:'[상황 3] 단말기 오류나 특정 해외 카드로 결제가 되지 않을 때 고객에게 정중하게 다른 카드를 요청하려면?', prompt:'직원의 올바른 응대 표현은?', options:['I’m sorry, we can’t process this card. Do you have another card?','This card is bad. Give another.','Cannot pay with card.'], answer:0, explain:'결제 불가 상황을 알리고 다른 결제 수단을 물어볼 때는 I’m sorry, we can’t process ~ 구문이 완벽합니다.' }
+            ],
+            scrambleQuestions: [
+              { prompt:'죄송하지만 현재 그 색상은 품절입니다.', answer:'I am afraid we are out of that color.', tokens:['afraid','we','out','of','I','color.','that','are','am'] },
+              { prompt:'네, 저희 매장은 면세 서비스를 제공합니다.', answer:'Yes we do offer tax free service here.', tokens:['service','Yes','here.','do','tax','we','free','offer'] },
+              { prompt:'죄송합니다. 그 상품은 샘플이 없습니다.', answer:'I am sorry it does not have samples.', tokens:['not','samples.','sorry','does','I','have','it','am'] }
+            ]
+          }
+        ]
+      },
+      2: {
+        title: '2차시 (패턴 4~5)',
+        steps: [
+          {
+            id: 'p4',
+            title: '패턴 4',
+            short: 'YOU CAN GET...',
+            subtitle: '환불, 할인, 영수증, 증정 등 고객이 받을 혜택/결과 안내',
+            matchingPairs: [
+              ['You can get a refund at the counter.', '환불은 계산대에서 받으실 수 있습니다.'],
+              ['You can get a sample kit when you spend over 20,000 won.', '2만원 이상 구매 시 샘플 키트를 받으실 수 있습니다.'],
+              ['You can get a tax-free benefit.', '택스프리 혜택을 받으실 수 있습니다.'],
+              ['You can get one more for free with this item.', '이 상품 구매 시 하나 더 무료로 받으실 수 있습니다.']
+            ],
+            mcqQuestions: [
+              { scenario:'[상황 1] 매장에 입점한 고객이 오늘 매장에서 받을 수 있는 프로모션 혜택을 질문했습니다. "3만원 이상 구매 시 샘플 키트를 받으실 수 있습니다"라고 설명하려면?', prompt:'직원의 올바른 응대 표현은?', options:['We give sample kit 30,000 won.','You can get a sample kit when you spend over 30,000 won.','I send sample kit to you.'], answer:1, explain:'고객이 얻게 될 혜택을 설명할 때는 You can get [혜택] when you spend over [금액] 구문을 씁니다.' },
+              { scenario:'[상황 2] 고객이 영수증을 보여주며 "Where can I ask for a refund?"라고 반품/환불 장소를 물었습니다. 계산대 위치를 알려주며 답변할 때 적절한 말은?', prompt:'직원의 올바른 응대 표현은?', options:['Refund is counter go.','Take money over there.','You can get a refund at the counter.'], answer:2, explain:'환불을 받을 수 있는 장소는 You can get a refund at the counter로 명확히 알려줍니다.' },
+              { scenario:'[상황 3] 1+1 행사 상품을 집어든 고객에게 이 상품 구매 시 하나 더 무료로 얻을 수 있음을 친절히 안내하려면?', prompt:'직원의 올바른 응대 표현은?', options:['You can get one more for free with this item.','This is buy one give one.','Take another one free.'], answer:0, explain:'1+1 혜택 안내 시 You can get one more for free 표현이 친근하고 정확합니다.' }
+            ],
+            scrambleQuestions: [
+              { prompt:'3만원 이상 구매하시면 증정품을 받으실 수 있습니다.', answer:'You can get a free gift when you spend over 30,000 won.', tokens:['a','when','won.','get','30,000','You','spend','can','gift','over','free','you'] },
+              { prompt:'계산대에서 환불받으실 수 있습니다.', answer:'You can get a refund at the counter.', tokens:['counter.','get','a','You','refund','at','the','can'] },
+              { prompt:'이 상품 구매 시 하나 더 무료로 받으실 수 있습니다.', answer:'You can get one more for free with this item.', tokens:['more','with','free','get','one','You','item.','can','for','this'] }
+            ]
+          },
+          {
+            id: 'p5',
+            title: '패턴 5',
+            short: 'IT’LL TAKE...',
+            subtitle: '소요 시간 안내, 기다림 요청, 장소 및 계산대 직접 안내',
+            matchingPairs: [
+              ['It’ll just take a moment.', '잠시만 기다려 주세요 (금방 끝납니다).'],
+              ['It will take around 3 to 5 minutes.', '3~5분 정도 걸립니다.'],
+              ['I’ll take you right there.', '바로 그쪽으로 안내해드리겠습니다.'],
+              ['I’ll take you to the counter.', '계산대로 안내해드리겠습니다.']
+            ],
+            mcqQuestions: [
+              { scenario:'[상황 1] 고객이 계산을 마치고자 "Where do I pay for this?"라고 물었습니다. 계산대로 직접 고객을 모시고 가며 안내할 때 쓰기 좋은 문장은?', prompt:'직원의 올바른 응대 표현은?', options:['Go counter now.','You can pay at the counter. Let me take you there.','Pay money over there.'], answer:1, explain:'위치 설명과 동행 안내를 함께 전달할 때는 Let me take you there / I’ll take you there가 최고입니다.' },
+              { scenario:'[상황 2] 택스프리 처리 및 결제 과정에서 약 2~3분 정도 대기 시간이 필요함을 미리 정중히 알리려면?', prompt:'직원의 올바른 응대 표현은?', options:['Wait 2 minutes.','You must spend 2 minutes.','It will take around 2 to 3 minutes.'], answer:2, explain:'소요 시간을 미리 예고할 때는 It will take around [시간] 패턴을 사용합니다.' },
+              { scenario:'[상황 3] 시스템 지연으로 결제가 조금 늦어져 기다려준 고객에게 마지막으로 감사를 표현하려면?', prompt:'직원의 올바른 응대 표현은?', options:['Thank you so much for your patience.','Thank you for waiting long.','Wait is finish.'], answer:0, explain:'양해해 준 고객에게 감사를 전할 때 쓰는 표준 서비스 매너 표현입니다.' }
+            ],
+            scrambleQuestions: [
+              { prompt:'약 3분 정도 소요됩니다.', answer:'It will take around 3 minutes.', tokens:['3','take','will','minutes.','It','around'] },
+              { prompt:'기다려 주셔서 정말 감사합니다.', answer:'Thank you so much for your patience.', tokens:['much','patience.','so','your','Thank','for','you'] },
+              { prompt:'계산대로 안내해드리겠습니다.', answer:'I will take you to the counter.', tokens:['counter.','take','to','will','you','I','the'] }
+            ]
+          }
+        ]
+      }
+    };
+
+    function buildDefaultState(){
+      return {
+        currentSection: 1,
+        currentStep: 0,
+        matchingAnswers: {},
+        mcqAnswers: {},
+        scrambleAnswers: {},
+        checked: {},
+        savedAt: null
+      };
+    }
+
+    function loadState(){
+      try {
+        var raw = localStorage.getItem(APP_STORAGE_KEY);
+        return raw ? JSON.parse(raw) : buildDefaultState();
+      } catch(e){
+        return buildDefaultState();
+      }
+    }
+
+    var state = loadState();
+
+    function saveState(){
+      state.savedAt = new Date().toISOString();
+      try {
+        localStorage.setItem(APP_STORAGE_KEY, JSON.stringify(state));
+        var el = document.getElementById('saveStateText');
+        if(el) el.textContent = '자동 저장 완료';
+      } catch(e){}
+    }
+
+    window.switchSection = function(secNum){
+      state.currentSection = secNum;
+      state.currentStep = 0;
+      saveState();
+      render();
+    };
+
+    window.goStep = function(stepIdx){
+      state.currentStep = stepIdx;
+      saveState();
+      render();
+    };
+
+    function renderHeader(){
+      var secNum = state.currentSection;
+      document.getElementById('sec1Btn').className = 'section-btn' + (secNum === 1 ? ' active' : '');
+      document.getElementById('sec2Btn').className = 'section-btn' + (secNum === 2 ? ' active' : '');
+      
+      var currentStepObj = sections[secNum].steps[state.currentStep];
+      document.getElementById('currentStepLabel').textContent = secNum + '차시 - ' + currentStepObj.title;
+
+      var wrap = document.getElementById('stepTabs');
+      wrap.innerHTML = sections[secNum].steps.map(function(step, idx){
+        var isDone = !!state.checked[step.id];
+        return '<button class="tab ' + (idx === state.currentStep ? 'active' : '') + ' ' + (isDone ? 'done' : '') + '" onclick="window.goStep(' + idx + ')">' +
+          '<strong>' + step.title + '</strong>' +
+          '<small>' + step.short + '</small>' +
+        '</button>';
+      }).join('');
+    }
+
+    function renderMain(){
+      var step = sections[state.currentSection].steps[state.currentStep];
+      var isChecked = !!state.checked[step.id];
+      var matchAns = state.matchingAnswers[step.id] || {};
+      var mcqAns = state.mcqAnswers[step.id] || {};
+
+      var html = '<h2>' + step.title + '. ' + step.short + '</h2><div class="sub">' + step.subtitle + '</div>';
+
+      /* 1. 표현 매칭 */
+      html += '<div class="panel"><h3>1. 표현 매칭</h3>';
+      step.matchingPairs.forEach(function(pair, i){
+        var sel = matchAns[i];
+        html += '<div style="margin-bottom:10px; padding:8px; background:#fff; border-radius:12px; border:1px solid var(--border);">' +
+          '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
+            '<span style="font-weight:800; color:var(--ink-olive); font-size:13px;">' + (i+1) + '. ' + pair[0] + '</span>' +
+            '<button class="audio-btn" onclick="window.speak(\'' + pair[0].replace(/'/g, "\\'") + '\')">🔊 발음</button>' +
+          '</div>' +
+          '<div style="display:flex; gap:6px; flex-wrap:wrap;">' +
+            step.matchingPairs.map(function(p, rIdx){
+              var active = Number(sel) === rIdx;
+              return '<button class="btn ' + (active ? 'selected' : '') + '" style="font-size:11px; padding:6px;" onclick="window.setMatch(\'' + step.id + '\',' + i + ',' + rIdx + ')">' + p[1] + '</button>';
+            }).join('') +
+          '</div></div>';
+      });
+      html += '</div>';
+
+      /* 2. 상황 부여 객관식 퀴즈 (정답 무작위화 적용) */
+      html += '<div class="panel"><h3>2. 실전 상황 응대 퀴즈</h3>';
+      step.mcqQuestions.forEach(function(q, i){
+        var sel = mcqAns[i];
+        html += '<div style="margin-bottom:14px; padding-bottom:10px; border-bottom:1px dashed var(--border);">' +
+          '<div class="scenario-box">' + q.scenario + '</div>' +
+          '<div style="font-size:13px; font-weight:800; margin-bottom:6px; color:var(--ink-olive);">' + (i+1) + '. ' + q.prompt + '</div>';
+        q.options.forEach(function(opt, optIdx){
+          var cls = 'choice';
+          if(Number(sel) === optIdx) cls += ' selected';
+          if(isChecked && optIdx === q.answer) cls += ' correct';
+          if(isChecked && Number(sel) === optIdx && optIdx !== q.answer) cls += ' wrong';
+          html += '<div style="display:flex; gap:4px; margin-bottom:4px;">' +
+            '<button class="' + cls + '" style="flex:1; text-align:left;" onclick="window.setMcq(\'' + step.id + '\',' + i + ',' + optIdx + ')">' + opt + '</button>' +
+            '<button class="audio-btn" style="min-height:auto;" onclick="window.speak(\'' + opt.replace(/'/g, "\\'") + '\')">🔊</button>' +
+          '</div>';
+        });
+        if(isChecked){
+          html += '<div style="font-size:11px; color:var(--muted); margin-top:4px;">💡 해설: ' + q.explain + '</div>';
+        }
+        html += '</div>';
+      });
+      html += '</div>';
+
+      /* 3. 문장 완성 */
+      html += '<div class="panel"><h3>3. 핵심 표현 문장 완성</h3>';
+      step.scrambleQuestions.forEach(function(q, i){
+        var built = (state.scrambleAnswers[step.id] || {})[i] || [];
+        var used = built.reduce(function(acc, item){ acc[item.id] = true; return acc; }, {});
+        html += '<div style="margin-bottom:10px; padding:8px; background:#fff; border-radius:12px; border:1px solid var(--border);">' +
+          '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">' +
+            '<span style="font-size:12px; font-weight:800;">' + (i+1) + '. ' + q.prompt + '</span>' +
+            '<button class="audio-btn" onclick="window.speak(\'' + q.answer.replace(/'/g, "\\'") + '\')">🔊 정답듣기</button>' +
+          '</div>' +
+          '<div class="build-box"><div class="built-wrap">' +
+            (built.length ? built.map(function(b, bIdx){
+              return '<button class="token selected" onclick="window.removeToken(\'' + step.id + '\',' + i + ',' + bIdx + ')">' + b.word + '</button>';
+            }).join('') : '<span class="help">단어를 순서대로 누르세요</span>') +
+          '</div></div>' +
+          '<div class="token-wrap">' +
+            q.tokens.map(function(tok, tIdx){
+              var tid = i + '-' + tIdx;
+              return '<button class="token ' + (used[tid] ? 'used' : '') + '" onclick="window.addToken(\'' + step.id + '\',' + i + ',\'' + tid + '\',\'' + tok + '\')">' + tok + '</button>';
+            }).join('') +
+          '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+
+      html += '<div class="inline-actions">' +
+        '<button class="primary" style="width:100%; min-height:46px;" onclick="window.checkStep(\'' + step.id + '\')">확인 및 채점하기</button>' +
+      '</div>';
+
+      document.getElementById('mainCard').innerHTML = html;
+    }
+
+    window.setMatch = function(stepId, lIdx, rIdx){
+      state.matchingAnswers[stepId] = state.matchingAnswers[stepId] || {};
+      if(state.matchingAnswers[stepId][lIdx] === rIdx) delete state.matchingAnswers[stepId][lIdx];
+      else state.matchingAnswers[stepId][lIdx] = rIdx;
+      saveState(); render();
+    };
+
+    window.setMcq = function(stepId, qIdx, optIdx){
+      state.mcqAnswers[stepId] = state.mcqAnswers[stepId] || {};
+      state.mcqAnswers[stepId][qIdx] = optIdx;
+      saveState(); render();
+    };
+
+    window.addToken = function(stepId, qIdx, tid, word){
+      state.scrambleAnswers[stepId] = state.scrambleAnswers[stepId] || {};
+      state.scrambleAnswers[stepId][qIdx] = state.scrambleAnswers[stepId][qIdx] || [];
+      state.scrambleAnswers[stepId][qIdx].push({id:tid, word:word});
+      saveState(); render();
+    };
+
+    window.removeToken = function(stepId, qIdx, bIdx){
+      state.scrambleAnswers[stepId][qIdx].splice(bIdx, 1);
+      saveState(); render();
+    };
+
+    window.checkStep = function(stepId){
+      state.checked[stepId] = true;
+      saveState(); render();
+      alert('채점이 완료되었습니다!');
+    };
+
+    document.getElementById('globalResetBtn').addEventListener('click', function(){
+      if(confirm('⚠️ 모든 차시의 답안 및 학습 내용이 초기화됩니다.\n정말 초기화하시겠습니까?')){
+        state = buildDefaultState();
+        saveState();
+        render();
+        window.scrollTo({top:0, behavior:'smooth'});
+      }
+    });
+
+    function render(){
+      renderHeader();
+      renderMain();
+    }
+
+    render();
+  })();
+  </script>
+</body>
+</html>
